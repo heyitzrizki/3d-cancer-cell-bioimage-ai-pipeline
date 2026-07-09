@@ -109,6 +109,40 @@ python scripts/explore_dataset.py \
 
 The exploration notebook at `notebooks/01_data_exploration.ipynb` applies the same workflow to both datasets. Generated figures remain local unless deliberately selected for version control.
 
+## Milestone 2: Classical Segmentation Baseline
+
+A classical baseline establishes an interpretable reference before deep learning. It exposes data-quality, preprocessing, annotation-coverage, and evaluation issues while keeping runtime and model complexity low.
+
+The baseline applies percentile intensity normalization, Gaussian denoising, smooth background subtraction, and final rescaling. Gaussian settings accept either one scalar or explicit per-axis values such as `(sigma_z, sigma_y, sigma_x)`, allowing later experiments to account for anisotropic voxel spacing without hardcoding unverified spacing assumptions. Otsu thresholding is the default segmentation method, followed by small-object removal, small-hole filling, and connected-component labeling. Adaptive thresholding and watershed are available as optional comparisons.
+
+When compatible CTC segmentation ground truth is available, the runner calculates Dice, IoU, precision, recall, F1, and absolute object-count error. MDA231's sparsely annotated 2D GT planes are evaluated only against their corresponding prediction planes. The metrics output records `evaluation_scope` and `evaluated_gt_files`, so sparse-plane results cannot be mistaken for full-volume evaluation. Missing or incompatible GT is reported clearly and does not prevent overlays or predictions from being saved.
+
+Run the default five-frame baseline:
+
+```bash
+python scripts/run_baseline_segmentation.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231 \
+  --sequence 01 \
+  --output-dir reports/milestone_2 \
+  --method otsu \
+  --max-frames 5 \
+  --min-size 64 \
+  --save-masks
+```
+
+Expected outputs:
+
+```text
+reports/milestone_2/
+├── overlays/
+├── predicted_masks/
+└── metrics/
+    ├── baseline_segmentation_metrics.csv
+    └── baseline_segmentation_metrics.json
+```
+
+The CSV and JSON files contain measured values only for frames with compatible GT. Frames without evaluation retain clear missing values rather than fabricated results.
+
 ## Pipeline Roadmap
 
 1. Explore volume dimensions, intensity distributions, annotations, and sequence structure.

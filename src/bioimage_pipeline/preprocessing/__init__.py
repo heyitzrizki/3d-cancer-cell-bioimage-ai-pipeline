@@ -1,5 +1,17 @@
 """Image preprocessing utilities."""
 
-from .preprocess import percentile_normalize
+from .preprocess import (
+    denoise_image,
+    normalize_intensity,
+    percentile_normalize,
+    preprocess_volume,
+    subtract_background,
+)
 
-__all__ = ["percentile_normalize"]
+__all__ = [
+    "denoise_image",
+    "normalize_intensity",
+    "percentile_normalize",
+    "preprocess_volume",
+    "subtract_background",
+]

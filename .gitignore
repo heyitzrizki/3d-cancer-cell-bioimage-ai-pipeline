@@ -28,8 +28,8 @@ data/features/
 data/predictions/
 checkpoints/
 logs/
-Fluo-C3DL-MDA231/
-Fluo-C3DH-A549/
+/Fluo-C3DL-MDA231/
+/Fluo-C3DH-A549/
 
 # Large image, archive, and model files
 *.tif
