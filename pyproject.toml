@@ -25,6 +25,7 @@ dependencies = [
 [project.optional-dependencies]
 notebooks = ["jupyter", "ipykernel"]
 dev = ["pytest"]
+deep-learning = ["torch", "torchvision"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

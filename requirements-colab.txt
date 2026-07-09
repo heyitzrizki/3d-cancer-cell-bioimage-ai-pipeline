@@ -1,0 +1,13 @@
+torch
+torchvision
+numpy
+pandas
+matplotlib
+scipy
+scikit-image
+opencv-python
+tifffile
+imagecodecs
+PyYAML
+tqdm
+scikit-learn
