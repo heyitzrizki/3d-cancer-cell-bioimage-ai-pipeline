@@ -59,6 +59,11 @@ def _gt_frame_id(path: Path) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def get_segmentation_gt_frame_index(gt_path: str | Path) -> int | None:
+    """Return the frame index from a CTC segmentation GT filename."""
+    return _gt_frame_id(Path(gt_path))
+
+
 def get_segmentation_gt_slice_index(gt_path: str | Path) -> int | None:
     """Return a z-slice index from names such as man_seg_000_013.tif."""
     numbers = _NUMBER_PATTERN.findall(Path(gt_path).stem)

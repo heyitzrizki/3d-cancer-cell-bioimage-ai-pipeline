@@ -9,6 +9,7 @@ from .inspect_dataset import (
 from .ground_truth import (
     find_segmentation_gt_files,
     find_tracking_gt_files,
+    get_segmentation_gt_frame_index,
     get_segmentation_gt_slice_index,
     load_gt_mask,
     match_prediction_to_gt_frame,
@@ -26,6 +27,7 @@ __all__ = [
     "find_ground_truth_dirs",
     "find_segmentation_gt_files",
     "find_tracking_gt_files",
+    "get_segmentation_gt_frame_index",
     "find_tiff_files",
     "get_image_statistics",
     "list_ctc_sequences",
