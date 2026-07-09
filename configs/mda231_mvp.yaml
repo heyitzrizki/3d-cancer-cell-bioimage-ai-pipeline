@@ -1,0 +1,20 @@
+experiment:
+  name: "mda231_mvp"
+  stage: "classical_baseline"
+dataset:
+  name: "Fluo-C3DL-MDA231"
+  role: "development"
+  sequences:
+    - "01"
+    - "02"
+preprocessing:
+  normalize: true
+  percentile_range:
+    - 1.0
+    - 99.8
+segmentation:
+  method: "otsu"
+evaluation:
+  metrics:
+    - "dice"
+    - "iou"

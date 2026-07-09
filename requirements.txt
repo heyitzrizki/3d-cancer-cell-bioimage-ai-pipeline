@@ -1,0 +1,12 @@
+numpy
+pandas
+matplotlib
+scipy
+scikit-image
+opencv-python
+tifffile
+PyYAML
+tqdm
+scikit-learn
+jupyter
+ipykernel

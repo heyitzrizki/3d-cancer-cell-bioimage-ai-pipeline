@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# Environments and local settings
+.venv/
+venv/
+env/
+.env
+configs/paths.local.yaml
+configs/paths.colab.yaml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data and generated artifacts
+data/raw/
+data/interim/
+data/processed/
+data/masks/
+data/features/
+data/predictions/
+checkpoints/
+logs/
+Fluo-C3DL-MDA231/
+Fluo-C3DH-A549/
+
+# Large image, archive, and model files
+*.tif
+*.tiff
+*.zip
+*.h5
+*.pt
+*.pth
+*.ckpt
+
+# Allow deliberately selected small report figures
+!reports/figures/
+!reports/figures/*.png
+!reports/figures/*.jpg
+!reports/figures/*.jpeg
+!reports/figures/*.svg
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

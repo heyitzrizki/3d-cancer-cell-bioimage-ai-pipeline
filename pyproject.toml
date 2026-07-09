@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "3d-cancer-cell-bioimage-ai-pipeline"
+version = "0.1.0"
+description = "Reproducible 3D+time cancer-cell bioimage analysis pipeline."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    "scikit-image",
+    "opencv-python",
+    "tifffile",
+    "PyYAML",
+    "tqdm",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+notebooks = ["jupyter", "ipykernel"]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

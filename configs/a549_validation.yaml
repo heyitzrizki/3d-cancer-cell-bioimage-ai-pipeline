@@ -1,0 +1,20 @@
+experiment:
+  name: "a549_external_validation"
+  stage: "external_validation"
+dataset:
+  name: "Fluo-C3DH-A549"
+  role: "external_validation"
+  sequences:
+    - "01"
+    - "02"
+preprocessing:
+  normalize: true
+  percentile_range:
+    - 1.0
+    - 99.8
+segmentation:
+  method: "otsu"
+evaluation:
+  metrics:
+    - "dice"
+    - "iou"
