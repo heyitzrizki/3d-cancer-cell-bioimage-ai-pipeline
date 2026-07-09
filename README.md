@@ -143,6 +143,118 @@ reports/milestone_2/
 
 The CSV and JSON files contain measured values only for frames with compatible GT. Frames without evaluation retain clear missing values rather than fabricated results.
 
+## Milestone 3: Cell-Level Feature Extraction
+
+Feature extraction converts segmented objects into structured, analysis-ready rows. This makes it possible to inspect morphology and fluorescence distributions, identify segmentation outliers, and prepare interpretable inputs for later statistical or machine-learning work.
+
+Each nonzero label in a predicted mask becomes one table row. Extracted measurements include pixel area or voxel count, 2D or 3D centroid coordinates, bounding-box coordinates, and—when an aligned intensity image is available—mean, minimum, maximum, and integrated intensity. Every row also records dataset, sequence, frame, source image, mask, and segmentation method.
+
+Run feature extraction on the current five-frame baseline masks:
+
+```bash
+python scripts/extract_features.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231 \
+  --sequence 01 \
+  --mask-dir reports/milestone_2/predicted_masks \
+  --output-dir reports/milestone_3 \
+  --method otsu \
+  --max-frames 5
+```
+
+Add `--use-preprocessed` to calculate intensity features from the current preprocessing pipeline instead of raw fluorescence intensities.
+
+Expected outputs:
+
+```text
+reports/milestone_3/
+├── feature_extraction_summary.md
+├── features/
+│   ├── mda231_cell_features.csv
+│   └── mda231_feature_summary.csv
+└── figures/
+    ├── cell_area_distribution.png
+    ├── mean_intensity_distribution.png
+    └── area_vs_intensity.png
+```
+
+These measurements inherit all errors and assumptions from the classical segmentation baseline. They are exploratory baseline-derived features, not final validated biological measurements.
+
+## Milestone 4: Basic Cell Tracking
+
+Tracking connects segmented cells over time so motion, persistence, and temporal changes can be analyzed instead of treating every frame independently. This milestone provides a transparent baseline for the 3D+time workflow.
+
+For each pair of consecutive frames, the tracker calculates Euclidean distances between object centroids and uses Hungarian assignment to find a one-to-one matching with minimum total distance. Matches beyond a configurable maximum distance are rejected, while unmatched objects receive new persistent track IDs. The resulting table includes frame-to-frame displacement, speed at a frame interval of one, cumulative displacement, and track length.
+
+Run tracking on the current MDA231 feature table:
+
+```bash
+python scripts/run_tracking.py \
+  --features-file reports/milestone_3/features/mda231_cell_features.csv \
+  --output-dir reports/milestone_4 \
+  --max-distance 50 \
+  --dataset-name mda231
+```
+
+Expected outputs:
+
+```text
+reports/milestone_4/
+├── tracking_summary.md
+├── tracks/
+│   ├── mda231_cell_tracks.csv
+│   └── mda231_track_summary.csv
+└── figures/
+    ├── cell_tracks_projection.png
+    ├── speed_distribution.png
+    └── track_duration_distribution.png
+```
+
+This centroid-only baseline does not model cell division, appearance, merges, or splits. Segmentation errors can break identity, and voxel-coordinate distances are not yet calibrated to physical spacing.
+
+## Milestone 5: 2D U-Net Segmentation
+
+Deep learning is introduced only after establishing inspectable classical baselines, evaluation conventions, and data-quality checks. The first learned model is a compact 2D U-Net because the official MDA231 segmentation ground truth consists of sparse annotated 2D planes extracted from 3D volumes. Training a 3D network directly on those sparse labels would require additional sampling and supervision design.
+
+`CTCAnnotatedPlaneDataset` reads only official masks from `01_GT/SEG/` and `02_GT/SEG/`. It parses each GT filename, locates the matching raw time-point volume, extracts the annotated z-plane, converts nonzero GT labels to binary foreground, and normalizes the raw image to `[0, 1]`. Predicted masks from Milestone 2 are never used as training targets.
+
+Install the optional deep-learning dependencies:
+
+```bash
+python -m pip install -e ".[deep-learning,dev]"
+```
+
+Run a small local CPU smoke test:
+
+```bash
+python scripts/train_unet2d.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231 \
+  --output-dir reports/milestone_5 \
+  --checkpoint-dir checkpoints/milestone_5 \
+  --sequence-ids 01 02 \
+  --epochs 1 \
+  --batch-size 1 \
+  --base-channels 4 \
+  --device cpu \
+  --max-samples 4
+```
+
+For full GPU training, open `colab/02_train_2d_unet_colab.ipynb`. It mounts Google Drive and writes reports and checkpoints directly under the configured external data root.
+
+Expected training outputs:
+
+```text
+reports/milestone_5/
+├── unet_2d_summary.md
+├── metrics/
+│   ├── unet_2d_training_history.csv
+│   └── unet_2d_metrics.csv
+└── figures/
+    ├── training_loss_curve.png
+    └── unet_2d_prediction_overlay.png
+```
+
+The model is trained on a limited number of sparse 2D annotations, without hyperparameter search or full-volume 3D supervision. The next model extension is a patch-based 3D U-Net with an annotation strategy appropriate for volumetric training.
+
 ## Pipeline Roadmap
 
 1. Explore volume dimensions, intensity distributions, annotations, and sequence structure.
