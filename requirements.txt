@@ -5,6 +5,7 @@ scipy
 scikit-image
 opencv-python
 tifffile
+imagecodecs
 PyYAML
 tqdm
 scikit-learn

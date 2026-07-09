@@ -1,4 +1,4 @@
-"""Print a concise summary of a Cell Tracking Challenge dataset."""
+"""Print a tabular summary of a Cell Tracking Challenge dataset."""
 
 import argparse
 import sys
@@ -9,7 +9,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from bioimage_pipeline.data.inspect_dataset import summarize_dataset_structure
+from bioimage_pipeline.data import summarize_dataset_structure
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,22 +19,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    summary = summarize_dataset_structure(parse_args().dataset_dir)
-    print(f"Dataset path: {summary['dataset_path']}")
-
-    print("Detected sequences:")
-    if not summary["sequences"]:
-        print("  None")
-    for sequence in summary["sequences"]:
-        print(f"  {sequence['name']}: {sequence['tiff_count']} TIFF files")
-
-    print("Detected ground-truth folders:")
-    if not summary["ground_truth"]:
-        print("  None")
-    for ground_truth in summary["ground_truth"]:
-        print(f"  {ground_truth['path']}")
-        print(f"    SEG: {ground_truth['seg_dir'] or 'not found'}")
-        print(f"    TRA: {ground_truth['tra_dir'] or 'not found'}")
+    dataset_dir = parse_args().dataset_dir.expanduser().resolve(strict=False)
+    summary = summarize_dataset_structure(dataset_dir)
+    print(f"Dataset path: {dataset_dir}")
+    if summary.empty:
+        print("No CTC sequence or ground-truth folders were detected.")
+        return
+    print(summary.to_string(index=False))
 
 
 if __name__ == "__main__":

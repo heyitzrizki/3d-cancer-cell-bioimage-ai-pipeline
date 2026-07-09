@@ -1,7 +1,19 @@
 """Inspect common Cell Tracking Challenge directory structures."""
 
 from pathlib import Path
-from typing import Any
+
+import pandas as pd
+
+from .load_images import find_tiff_files
+
+SUMMARY_COLUMNS = (
+    "dataset",
+    "sequence",
+    "folder_type",
+    "folder_path",
+    "exists",
+    "tiff_count",
+)
 
 
 def _as_existing_directory(directory: str | Path) -> Path:
@@ -11,15 +23,8 @@ def _as_existing_directory(directory: str | Path) -> Path:
     return path
 
 
-def find_tiff_files(directory: str | Path) -> list[Path]:
-    """Return TIFF files below a directory, sorted by path."""
-    path = _as_existing_directory(directory)
-    files = [*path.rglob("*.tif"), *path.rglob("*.tiff")]
-    return sorted({file.resolve() for file in files})
-
-
 def list_ctc_sequences(raw_dataset_dir: str | Path) -> list[Path]:
-    """Return numeric CTC image-sequence directories such as 01 and 02."""
+    """Return numeric image-sequence directories such as 01 and 02."""
     root = _as_existing_directory(raw_dataset_dir)
     return sorted(
         path.resolve()
@@ -29,7 +34,7 @@ def list_ctc_sequences(raw_dataset_dir: str | Path) -> list[Path]:
 
 
 def find_ground_truth_dirs(raw_dataset_dir: str | Path) -> list[Path]:
-    """Return CTC ground-truth directories such as 01_GT and 02_GT."""
+    """Return ground-truth directories such as 01_GT and 02_GT."""
     root = _as_existing_directory(raw_dataset_dir)
     return sorted(
         path.resolve()
@@ -40,33 +45,71 @@ def find_ground_truth_dirs(raw_dataset_dir: str | Path) -> list[Path]:
     )
 
 
-def summarize_dataset_structure(raw_dataset_dir: str | Path) -> dict[str, Any]:
-    """Summarize sequences, TIFF counts, and available SEG/TRA annotations."""
-    root = _as_existing_directory(raw_dataset_dir)
-    sequence_summaries = [
-        {
-            "name": sequence.name,
-            "path": sequence,
-            "tiff_count": len(find_tiff_files(sequence)),
-        }
-        for sequence in list_ctc_sequences(root)
-    ]
+def find_annotation_dirs(ground_truth_dir: str | Path) -> dict[str, Path | None]:
+    """Find SEG and TRA directories inside one ground-truth directory."""
+    gt_dir = _as_existing_directory(ground_truth_dir)
+    return {
+        annotation: path.resolve() if (path := gt_dir / annotation).is_dir() else None
+        for annotation in ("SEG", "TRA")
+    }
 
-    ground_truth = []
-    for gt_dir in find_ground_truth_dirs(root):
-        seg_dir = gt_dir / "SEG"
-        tra_dir = gt_dir / "TRA"
-        ground_truth.append(
+
+def _count_tiff_files(directory: Path | None) -> int:
+    if directory is None or not directory.is_dir():
+        return 0
+    return len(find_tiff_files(directory, recursive=False))
+
+
+def summarize_dataset_structure(raw_dataset_dir: str | Path) -> pd.DataFrame:
+    """Return a tabular summary of CTC sequence and annotation folders."""
+    root = _as_existing_directory(raw_dataset_dir)
+    rows: list[dict[str, object]] = []
+
+    sequence_names = {path.name for path in list_ctc_sequences(root)}
+    gt_dirs = {path.name.removesuffix("_GT"): path for path in find_ground_truth_dirs(root)}
+    sequence_names.update(gt_dirs)
+
+    for sequence_name in sorted(sequence_names):
+        sequence_dir = root / sequence_name
+        rows.append(
             {
-                "name": gt_dir.name,
-                "path": gt_dir,
-                "seg_dir": seg_dir.resolve() if seg_dir.is_dir() else None,
-                "tra_dir": tra_dir.resolve() if tra_dir.is_dir() else None,
+                "dataset": root.name,
+                "sequence": sequence_name,
+                "folder_type": "sequence",
+                "folder_path": sequence_dir.resolve(),
+                "exists": sequence_dir.is_dir(),
+                "tiff_count": _count_tiff_files(sequence_dir if sequence_dir.is_dir() else None),
             }
         )
 
-    return {
-        "dataset_path": root,
-        "sequences": sequence_summaries,
-        "ground_truth": ground_truth,
-    }
+        gt_dir = gt_dirs.get(sequence_name)
+        if gt_dir is None:
+            continue
+
+        rows.append(
+            {
+                "dataset": root.name,
+                "sequence": sequence_name,
+                "folder_type": "GT",
+                "folder_path": gt_dir,
+                "exists": True,
+                "tiff_count": _count_tiff_files(gt_dir),
+            }
+        )
+
+        annotation_dirs = find_annotation_dirs(gt_dir)
+        for annotation in ("SEG", "TRA"):
+            annotation_dir = annotation_dirs[annotation]
+            expected_path = gt_dir / annotation
+            rows.append(
+                {
+                    "dataset": root.name,
+                    "sequence": sequence_name,
+                    "folder_type": annotation,
+                    "folder_path": annotation_dir or expected_path.resolve(),
+                    "exists": annotation_dir is not None,
+                    "tiff_count": _count_tiff_files(annotation_dir),
+                }
+            )
+
+    return pd.DataFrame(rows, columns=SUMMARY_COLUMNS)

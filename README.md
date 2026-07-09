@@ -68,7 +68,7 @@ Copy `configs/paths.local.example.yaml` to `configs/paths.local.yaml`, replace t
 python scripts/inspect_dataset.py --dataset-dir "PATH/TO/Fluo-C3DL-MDA231"
 ```
 
-Raw datasets currently placed in the repository root are ignored for safety, but moving them to the configured external data root is recommended.
+Local datasets under `data/raw/` are ignored for safety. Keep large data there for local exploration or use the configured external data root.
 
 ## Google Colab Setup
 
@@ -80,6 +80,34 @@ The equivalent setup command is:
 python scripts/setup_drive_dirs.py \
   --data-root "/content/drive/MyDrive/self learning/Self Project/3d-cancer-cell-bioimage-ai-pipeline-data"
 ```
+
+## Milestone 1: Dataset Inspection and Visualization
+
+Milestone 1 adds reusable utilities for discovering and loading TIFF images, summarizing Cell Tracking Challenge sequence and annotation folders, calculating basic image statistics, and visualizing 2D images or 3D volumes. It does not perform preprocessing, segmentation, or model training.
+
+For local exploration, place the ignored datasets at:
+
+```text
+data/raw/Fluo-C3DL-MDA231
+data/raw/Fluo-C3DH-A549
+```
+
+Inspect the primary dataset and print a pandas DataFrame summary:
+
+```bash
+python scripts/inspect_dataset.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231
+```
+
+Inspect the dataset, load its first sequence image, and save a middle z-slice and max intensity projection:
+
+```bash
+python scripts/explore_dataset.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231 \
+  --output-dir reports/figures
+```
+
+The exploration notebook at `notebooks/01_data_exploration.ipynb` applies the same workflow to both datasets. Generated figures remain local unless deliberately selected for version control.
 
 ## Pipeline Roadmap
 
