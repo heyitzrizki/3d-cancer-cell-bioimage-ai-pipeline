@@ -255,6 +255,63 @@ reports/milestone_5/
 
 The model is trained on a limited number of sparse 2D annotations, without hyperparameter search or full-volume 3D supervision. The next model extension is a patch-based 3D U-Net with an annotation strategy appropriate for volumetric training.
 
+## Milestone 6: Model Evaluation and Baseline Comparison
+
+Milestone 6 compares the interpretable classical segmentation baseline against the trained 2D U-Net on the same official sparse CTC SEG planes. This makes the project easier to explain as an experiment: one shared evaluation target, two segmentation approaches, and side-by-side metrics/overlays.
+
+The comparison uses binary foreground metrics:
+
+- Dice
+- IoU
+- precision
+- recall
+- F1
+- object-count error
+
+It evaluates only sparse annotated 2D planes from `01_GT/SEG/` and `02_GT/SEG/`. It does not claim full-volume 3D performance.
+
+Run locally after copying or training a checkpoint:
+
+```bash
+python scripts/compare_segmentation_methods.py \
+  --dataset-dir data/raw/Fluo-C3DL-MDA231 \
+  --checkpoint-path checkpoints/milestone_5/unet_2d_best.pt \
+  --output-dir reports/milestone_6 \
+  --sequence-ids 01 02 \
+  --classical-method otsu \
+  --device auto
+```
+
+Run in Colab using the external Google Drive data root:
+
+```bash
+python scripts/compare_segmentation_methods.py \
+  --dataset-dir "/content/drive/MyDrive/self learning/Self Project/3d-cancer-cell-bioimage-ai-pipeline-data/data/raw/Fluo-C3DL-MDA231" \
+  --checkpoint-path "/content/drive/MyDrive/self learning/Self Project/3d-cancer-cell-bioimage-ai-pipeline-data/checkpoints/milestone_5/unet_2d_best.pt" \
+  --output-dir "/content/drive/MyDrive/self learning/Self Project/3d-cancer-cell-bioimage-ai-pipeline-data/reports/milestone_6" \
+  --sequence-ids 01 02 \
+  --classical-method otsu \
+  --device auto
+```
+
+If `--checkpoint-path` is omitted or missing, the script still evaluates the classical baseline and prints a warning that U-Net comparison was skipped.
+
+Expected outputs:
+
+```text
+reports/milestone_6/
+├── milestone_6_summary.md
+├── metrics/
+│   ├── segmentation_method_comparison.csv
+│   └── segmentation_method_summary.csv
+└── figures/
+    ├── comparison_overlay_000.png
+    ├── comparison_overlay_001.png
+    └── comparison_overlay_002.png
+```
+
+The local notebook `notebooks/06_model_comparison.ipynb` documents the same workflow. Keep large checkpoints and raw prediction artifacts outside Git; small summary CSVs or selected figures can be copied into version control later only if they are intentionally chosen for portfolio presentation.
+
 ## Pipeline Roadmap
 
 1. Explore volume dimensions, intensity distributions, annotations, and sequence structure.
@@ -263,13 +320,14 @@ The model is trained on a limited number of sparse 2D annotations, without hyper
 4. Evaluate predictions against available segmentation ground truth.
 5. Extract interpretable morphology and intensity features.
 6. Train a 2D U-Net baseline.
-7. Train a patch-based 3D U-Net.
-8. Add cell tracking and end-to-end experiment management.
+7. Compare classical and learned segmentation baselines.
+8. Train a patch-based 3D U-Net.
+9. Add end-to-end experiment management.
 
 ## Current MVP Scope
 
-The initial MVP covers project setup, dataset inspection, data exploration, preprocessing, classical segmentation, evaluation, and feature extraction. It does not yet train neural networks or report experimental results.
+The current MVP covers project setup, dataset inspection, data exploration, preprocessing, classical segmentation, sparse-plane evaluation, feature extraction, centroid tracking, 2D U-Net training, and baseline-vs-U-Net comparison.
 
 ## Future Work
 
-Planned extensions include 2D U-Net training, patch-based 3D U-Net experiments, temporal cell tracking, DVC-backed data versioning, Docker environments, and Airflow orchestration. These will be introduced only after the MVP pipeline and evaluation protocol are stable.
+Planned extensions include patch-based 3D U-Net experiments, stronger validation on Fluo-C3DH-A549, DVC-backed data versioning, Docker environments, and Airflow orchestration. These should be introduced only after the current evaluation protocol and artifact storage strategy are stable.
